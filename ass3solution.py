@@ -73,7 +73,7 @@ def track_pitch_hps(x, blockSize, hopSize, fs):
     timeInSec=t
     return f0, timeInSec
 
-def test_sine():
+def executeassign3():
     f1 = 441.
     f2 = 882.
     fs = 44100
@@ -108,7 +108,7 @@ def test_sine():
     plt.tight_layout()
     plt.show()
 
-def executeassign3(path_data):
+def eval(path_data):
 
     f0_means = []
     txtFiles = sorted(glob.glob(os.path.join(path_data, '*.txt')))
@@ -124,6 +124,6 @@ def executeassign3(path_data):
 if __name__ == '__main__':
     # f = executeassign3('trainData')
     # print(f)
-    test_sine()
+    executeassign3()
 
 
