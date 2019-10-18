@@ -1,17 +1,19 @@
 import numpy as np
 from scipy.io.wavfile import read
 import matplotlib.pyplot as plt
+import os
+import glob
 
 
 def wavread(path):
-    sr, x = read(path)
+    fs, x = read(path)
     if x.dtype == 'float32':
-        return sr, x
+        return fs, x
     elif x.dtype == 'uint8':
-        return sr, (x / 128.) - 1
+        return fs, (x / 128.) - 1
     else:
         bits = x.dtype.itemsize * 8
-        return sr, x / (2 ** (bits - 1))
+        return fs, x / (2 ** (bits - 1))
 
 def block_audio(x, blockSize, hopSize, fs):
     numBlocks = int(np.ceil(x.size / hopSize))
@@ -36,7 +38,7 @@ def compute_spectrogram(xb, fs):
     return X, freq
 
 def track_pitch_fftmax(x, blockSize, hopSize, fs):
-    xb, t=block_audio(x, blockSize, hopSize, fs)
+    xb, t = block_audio(x, blockSize, hopSize, fs)
     X, freq=compute_spectrogram(xb, fs)
     timeInSec=t
     f0=np.zeros((1,len(X)))
@@ -70,3 +72,58 @@ def track_pitch_hps(x, blockSize, hopSize, fs):
     f0=get_f0_from_Hps(X, fs, order)
     timeInSec=t
     return f0, timeInSec
+
+def test_sine():
+    f1 = 441.
+    f2 = 882.
+    fs = 44100
+    y1 = np.sin(2 * np.pi * f1 * np.linspace(0, 1, fs))
+    y2 = np.sin(2 * np.pi * f2 * np.linspace(1, 2, fs))
+    y = np.concatenate((y1, y2), axis=0)
+    f0_fftmax, t_fftmax = track_pitch_fftmax(y, 2048, 512, fs)
+    print(f0_fftmax.shape, t_fftmax.shape)
+    f0_hps, t_hps = track_pitch_hps(y, 1024, 512, fs)
+    f0_ref = np.concatenate((np.ones(int(np.floor(len(t_fftmax) / 2))) * 441, np.ones(int(np.ceil(len(t_fftmax) / 2))) * 882), axis=0)
+    error = f0_fftmax - f0_ref
+    # plt.plot(x, y)
+    # plt.xlabel('sample(n)')
+    # plt.ylabel('voltage(V)')
+    # plt.show()
+    # print(f0_fftmax)
+    plt.subplot(211)
+    plt.title('Predicted Frequency')
+    plt.plot(t_fftmax, np.transpose(f0_fftmax), label='Prediction')
+    plt.plot(t_fftmax, f0_ref, label='Ground Truth')
+    plt.legend()
+    plt.xlabel('Time')
+    plt.ylabel('Frequency (Hz)')
+    plt.grid()
+
+    plt.subplot(212)
+    plt.title('Prediction Error')
+    plt.plot(t_fftmax, np.transpose(error))
+    plt.xlabel('Time')
+    plt.ylabel('Error (Hz)')
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
+def executeassign3(path_data):
+
+    f0_means = []
+    txtFiles = sorted(glob.glob(os.path.join(path_data, '*.txt')))
+    audioFiles = sorted(glob.glob(os.path.join(path_data, '*.wav')))
+    for file in audioFiles:
+        fs, audio = wavread(file)
+        f0, t = track_pitch_fftmax(audio, 1024, 512, fs)
+        plt.plot(t, f0)
+        # f0_avg = np.mean(f0)
+        # f0_means.append(f0_avg)
+    return
+
+if __name__ == '__main__':
+    # f = executeassign3('trainData')
+    # print(f)
+    test_sine()
+
+
