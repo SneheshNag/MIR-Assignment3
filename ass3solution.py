@@ -73,16 +73,13 @@ def track_pitch_hps(x, blockSize, hopSize, fs):
     timeInSec=t
     return f0, timeInSec
 
-def extract_rms(xb, blockSize, hopSize, fs):
+def extract_rms(xb):
     rms = np.zeros(xb.shape[0])
     for i in range(xb.shape[0]):
-        start = i * hopSize
-        end = np.min([xb.size - 1, start + blockSize - 1])
-        rms[i] = np.sqrt(np.mean(np.dot(xb[i, :], xb[i, :]))) / (end + 1 - start) #needs to be corrected
+        rms[i] = np.sqrt(np.mean(xb[i]**2))  #needs to be corrected
     e = 0.00001
     rms[rms < e] = e
     rms = 20 * np.log10(rms)
-
     return rms
 
 def create_voicing_mask(rmsDb, thresholdDb):
