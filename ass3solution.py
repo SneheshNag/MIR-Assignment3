@@ -73,6 +73,32 @@ def track_pitch_hps(x, blockSize, hopSize, fs):
     timeInSec=t
     return f0, timeInSec
 
+def extract_rms(xb, blockSize, hopSize, fs):
+    rms = np.zeros(xb.shape[0])
+    for i in range(xb.shape[0]):
+        start = i * hopSize
+        end = np.min([xb.size - 1, start + blockSize - 1])
+        rms[i] = np.sqrt(np.mean(np.dot(xb[i, :], xb[i, :]))) / (end + 1 - start) #needs to be corrected
+    e = 0.00001
+    rms[rms < e] = e
+    rms = 20 * np.log10(rms)
+
+    return rms
+
+def create_voicing_mask(rmsDb, thresholdDb):
+    mask = rmsDb
+    for i in range(rmsDb.shape[0]):
+        if rmsDb[i] < thresholdDb:
+            mask[i] = 0
+        elif rmsDb[i] >= thresholdDb:
+            mask[i] = 1
+    return mask
+
+def apply_voicing_mask(f0, mask):
+
+    f0Adj = f0 * mask
+    return f0Adj
+
 def executeassign3():
     f1 = 441.
     f2 = 882.
@@ -84,7 +110,8 @@ def executeassign3():
     print(f0_fftmax.shape, t_fftmax.shape)
     f0_hps, t_hps = track_pitch_hps(y, 1024, 512, fs)
     f0_ref = np.concatenate((np.ones(int(np.floor(len(t_fftmax) / 2))) * 441, np.ones(int(np.ceil(len(t_fftmax) / 2))) * 882), axis=0)
-    error = f0_fftmax - f0_ref
+    error_fftmax = f0_fftmax - f0_ref
+    error_hps = f0_hps - f0_ref
     # plt.plot(x, y)
     # plt.xlabel('sample(n)')
     # plt.ylabel('voltage(V)')
@@ -101,12 +128,31 @@ def executeassign3():
 
     plt.subplot(212)
     plt.title('Prediction Error')
-    plt.plot(t_fftmax, np.transpose(error))
+    plt.plot(t_fftmax, np.transpose(error_fftmax))
     plt.xlabel('Time')
     plt.ylabel('Error (Hz)')
     plt.grid()
     plt.tight_layout()
     plt.show()
+
+    plt.subplot(211)
+    plt.title('Predicted Frequency')
+    plt.plot(t_hps, np.transpose(f0_hps), label='Prediction')
+    plt.plot(t_hps, f0_ref, label='Ground Truth')
+    plt.legend()
+    plt.xlabel('Time')
+    plt.ylabel('Frequency (Hz)')
+    plt.grid()
+
+    plt.subplot(212)
+    plt.title('Prediction Error')
+    plt.plot(t_hps, np.transpose(error_hps))
+    plt.xlabel('Time')
+    plt.ylabel('Error (Hz)')
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+
 
 def eval(path_data):
 
@@ -119,7 +165,12 @@ def eval(path_data):
         plt.plot(t, f0)
         # f0_avg = np.mean(f0)
         # f0_means.append(f0_avg)
+
     return
+
+def eval_pitchtrack_v2():
+    
+    track_pitch_hps(x, blockSize, hopSize, fs)
 
 if __name__ == '__main__':
     # f = executeassign3('trainData')
