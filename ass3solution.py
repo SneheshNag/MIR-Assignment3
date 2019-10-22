@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.io.wavfile import read
+from scipy.signal import find_peaks
 import matplotlib.pyplot as plt
 import os
 import glob
@@ -37,6 +38,7 @@ def compute_spectrogram(xb, fs):
     freq = np.arange(0, len(X[0]), dtype=int) * val
     return X, freq
 
+# A2
 def track_pitch_fftmax(x, blockSize, hopSize, fs):
     xb, t = block_audio(x, blockSize, hopSize, fs)
     X, freq=compute_spectrogram(xb, fs)
@@ -48,6 +50,7 @@ def track_pitch_fftmax(x, blockSize, hopSize, fs):
                 f0[0,i]=freq[j]
     return f0, timeInSec
 
+# B1
 def get_f0_from_Hps(X, fs, order):
     freqRange=int((len(X[0])-1)/order)
     # print len(X)
@@ -69,6 +72,7 @@ def get_f0_from_Hps(X, fs, order):
         f0[0,h]=freqSpread[index]
     return f0
 
+# B2
 def track_pitch_hps(x, blockSize, hopSize, fs):
     xb, t=block_audio(x, blockSize, hopSize, fs)
     order=4
@@ -77,6 +81,7 @@ def track_pitch_hps(x, blockSize, hopSize, fs):
     timeInSec=t
     return f0, timeInSec
 
+# C1
 def extract_rms(xb):
     rms = np.zeros(xb.shape[0])
     for i in range(xb.shape[0]):
@@ -85,6 +90,7 @@ def extract_rms(xb):
     rms[rms < e] = e
     rms = 20 * np.log10(rms)
 
+# C2
 def create_voicing_mask(rmsDb, thresholdDb):
     mask = rmsDb
     for i in range(rmsDb.shape[0]):
@@ -94,21 +100,44 @@ def create_voicing_mask(rmsDb, thresholdDb):
             mask[i] = 1
     return mask
 
+# C3
 def apply_voicing_mask(f0, mask):
 
     f0Adj = f0 * mask
     return f0Adj
 
+# D1
 def eval_voiced_fp(estimation, annotation):
     pfp = np.count_nonzero(estimation) / np.count_nonzero(annotation==0)
     return pfp
 
+# D2
 def eval_voiced_fn(estimation, annotation):
     num = np.take(estimation, np.nonzero(annotation))
     pfn = np.count_nonzero(num==0) / np.count_nonzero(annotation)
     return pfn
 
+# ACF
+def comp_acf(inputVector, bIsNormalized=True):
+    r = np.correlate(inputVector, inputVector, 'full')
+    if bIsNormalized:
+        r = r/(np.sum(np.square(r)))
+    return r[len(r) // 2 :]
 
+def get_f0_from_acf(r, fs):
+    peaks = find_peaks(r)[0]
+    # plt.plot(r)
+    # plt.plot(peaks, r[peaks], 'rs')
+    # plt.show()
+    if len(peaks) >= 2:
+        p = sorted(r[peaks])[::-1]
+        sorted_arg = np.argsort(r[peaks])[::-1]
+        f0 = fs / abs(peaks[sorted_arg][1] - peaks[sorted_arg][0])
+        return f0
+    return 0
+
+
+# D3
 def eval_pitchtrack_v2(estimation, annotation):
 
 
@@ -131,6 +160,8 @@ def eval_pitchtrack_v2(estimation, annotation):
 
     return errCentRms, pfp, pfn
 
+
+# E1
 def executeassign3():
     f1 = 441.
     f2 = 882.
@@ -188,7 +219,6 @@ def executeassign3():
     plt.show()
 
     return
-
 
 def eval(path_data):
 
@@ -248,14 +278,8 @@ def eval(path_data):
 
 
 if __name__ == '__main__':
-    # f = executeassign3('trainData')
+    f = executeassign3('trainData')
     # print(f)
     # executeassign3()
-    eval('trainData')
-    #
-    # fs, x = wavread('./traindata/sine-440.wav')
-    # xb, t = block_audio(x, 2048, 512, fs)
-    # X, freq = compute_spectrogram(xb, fs)
-    # f0 = get_f0_from_Hps(X, fs, 4)
-    #
-    # print(f0)
+    # eval('trainData')
+
