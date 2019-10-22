@@ -118,13 +118,13 @@ def eval_voiced_fn(estimation, annotation):
     return pfn
 
 # ACF
-def comp_acf(inputVector, bIsNormalized=True):
+def get_f0_from_acf(inputVector, bIsNormalized=True):
     r = np.correlate(inputVector, inputVector, 'full')
+
     if bIsNormalized:
         r = r/(np.sum(np.square(r)))
-    return r[len(r) // 2 :]
 
-def get_f0_from_acf(r, fs):
+    r =  r[len(r) // 2 :]
     peaks = find_peaks(r)[0]
     # plt.plot(r)
     # plt.plot(peaks, r[peaks], 'rs')
