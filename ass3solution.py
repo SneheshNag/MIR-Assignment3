@@ -31,7 +31,7 @@ def hann(window_length):
 
 # A1
 def compute_spectrogram(xb, fs):
-    K = len(xb[0])
+    K = len(xb[1])
     X = np.abs(np.fft.rfft(xb*hann(K), K, axis=1))
     val = (1.0 * fs) / K
     freq = np.arange(0, len(X[0]), dtype=int) * val
@@ -61,17 +61,17 @@ def get_f0_from_Hps(X, fs, order):
             for j in range(1,order+1):
                 multiplier=multiplier*(X[h,i*j])    #There should be a power of 2 here but it seemed to work better without it
             HPS[h,i]=multiplier
-            if max(HPS[h,:])>10**10:    #Prevent the HPS getting too big 
-                HPS[h,:]=HPS[h,:]/max(HPS[h,:]) 
+            if max(HPS[h,:])>10**10:    #Prevent the HPS getting too big
+                HPS[h,:]=HPS[h,:]/max(HPS[h,:])
         for j in range(freqRange):
             if max(HPS[h,:])==HPS[h,j]:
                 index=j
-        f0[0,h]=freqSpread[index] 
+        f0[0,h]=freqSpread[index]
     return f0
 
 def track_pitch_hps(x, blockSize, hopSize, fs):
     xb, t=block_audio(x, blockSize, hopSize, fs)
-    order=7
+    order=4
     X, freq=compute_spectrogram(xb, fs)
     f0=get_f0_from_Hps(X, fs, order)
     timeInSec=t
@@ -80,11 +80,10 @@ def track_pitch_hps(x, blockSize, hopSize, fs):
 def extract_rms(xb):
     rms = np.zeros(xb.shape[0])
     for i in range(xb.shape[0]):
-        rms[i] = np.sqrt(np.mean(xb[i]**2))  #needs to be corrected
+        rms[i] = np.sqrt(np.mean((xb[i, :] ** 2)))
     e = 0.00001
     rms[rms < e] = e
     rms = 20 * np.log10(rms)
-    return rms
 
 def create_voicing_mask(rmsDb, thresholdDb):
     mask = rmsDb
@@ -99,6 +98,36 @@ def apply_voicing_mask(f0, mask):
 
     f0Adj = f0 * mask
     return f0Adj
+
+def eval_voiced_fp(estimation, annotation):
+    pfp = np.count_nonzero(estimation) / np.count_nonzero(annotation==0)
+    return pfp
+
+def eval_voiced_fn(estimation, annotation):
+    num = np.take(estimation, np.nonzero(annotation))
+    pfn = np.count_nonzero(num==0) / np.count_nonzero(annotation)
+    return pfn
+
+
+def eval_pitchtrack_v2(estimation, annotation):
+    # Remove values for zeros in groundtruthInHz
+    estimation = np.take(estimation, np.nonzero(annotation)).squeeze()
+    annotation = np.take(annotation, np.nonzero(annotation)).squeeze()
+
+    # Remove values for zeros in estimateInHz
+    annotation = np.take(annotation, np.nonzero(estimation)).squeeze()
+    estimation = np.around(np.take(estimation, np.nonzero(estimation)).squeeze(), 3)
+
+    # Convert to Cents
+    estimateInCents = 1200 * np.log2(estimation / 440)
+    annotationInCents = 1200 * np.log2(annotation / 440)
+
+    errCentRms = np.sqrt(np.mean(np.power(estimateInCents - groundtruthInCents, 2)))
+
+    pfp = eval_voiced_fp(estimation, annotation)
+    pfn = eval_voiced_fn(estimation, annotation)
+
+    return errCentRms, pfp, pfn
 
 def executeassign3():
     f1 = 441.
@@ -154,28 +183,67 @@ def executeassign3():
     plt.tight_layout()
     plt.show()
 
+    return
+
 
 def eval(path_data):
 
     f0_means = []
-    txtFiles = sorted(glob.glob(os.path.join(path_data, '*.txt')))
+    textFiles = sorted(glob.glob(os.path.join(path_data, '*.txt')))
     audioFiles = sorted(glob.glob(os.path.join(path_data, '*.wav')))
-    for file in audioFiles:
-        fs, audio = wavread(file)
-        f0, t = track_pitch_fftmax(audio, 1024, 512, fs)
-        plt.plot(t, f0)
-        # f0_avg = np.mean(f0)
-        # f0_means.append(f0_avg)
+    # for Afile in audioFiles:
+    #     fs, audio = wavread(file)
+    #     f0, t = track_pitch_fftmax(audio, 1024, 512, fs)
+    #     = eval_pitchtrack_v2(audioFiles[0], 1024, 512, 44100)
+    #     plt.plot(t, f0)
+    #     f0_avg = np.mean(f0)
+    #     f0_means.append(f0_avg)
+    for i in range(len(textFiles)):
+        print('Processing file:', i + 1)
 
+        # Calculate estimated pitch
+        fs, audio = wavread(audioFiles[i])
+        # est_freqHz, est_timestamps = track_pitch_fftmax(audio, 1024, 512, fs)
+        _, est_timestamps = block_audio(audio, 1024, 512, fs)
+        # Get annotated data
+        with open(textFiles[i], 'r') as f:
+            ann_timestamps = []
+            ann_freqHz = []
+            for eachLine in f:
+                fields = eachLine[:-1].split('     ')
+                ann_timestamps.append(float(fields[0]))
+                ann_freqHz.append(float(fields[2]))
+
+            ann_timestamps = np.array(ann_timestamps)
+            ann_freqHz = np.array(ann_freqHz)
+
+        matchPrecision = 0.5  # Check for timestamps in range of 1 sec
+        matchingAnnotatedTimestamps = []
+        matchingAnnotatedFreqHz = []
+
+        for i in range(len(est_timestamps)):
+            est_timestamps = np.around(est_timestamps[i], 3)
+
+            closebyTimestampsIdx = np.argwhere((ann_timestamps > (est_timestamps - matchPrecision)) & (
+                        ann_timestamps < (est_timestamps + matchPrecision))).squeeze()
+
+            closestTimestampIdx = sorted(closebyTimestampsIdx)[0] + np.abs(
+                np.take(ann_timestamps, closebyTimestampsIdx) - est_timestamps).argmin()
+
+            matchingAnnotatedTimestamps.append(ann_timestamps[closestTimestampIdx])
+            matchingAnnotatedFreqHz.append(ann_freqHz[closestTimestampIdx])
+
+        matchingAnnotatedTimestamps = np.array(matchingAnnotatedTimestamps)
+        matchingAnnotatedFreqHz = np.array(matchingAnnotatedFreqHz)
+        est_freqHz_fft, est_timestamps_fft = track_pitch_fftmax(audio, 1024, 512, fs)
+        errCentRms_fft, pfp_fft, pfn_fft = eval_pitchtrack_v2(est_freqHz_fft, matchingAnnotatedFreqHz)
+        est_freqHz_hps, est_timestamps_hps = track_pitch_hps(audio, 1024, 512, fs)
+        errCentRms_hps, pfp_hps, pfn_hps = eval_pitchtrack_v2(est_freqHz_hps, matchingAnnotatedFreqHz)
     return
 
-def eval_pitchtrack_v2():
-    
-    track_pitch_hps(x, blockSize, hopSize, fs)
+
 
 if __name__ == '__main__':
     # f = executeassign3('trainData')
     # print(f)
     executeassign3()
-
-
