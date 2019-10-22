@@ -49,13 +49,11 @@ def track_pitch_fftmax(x, blockSize, hopSize, fs):
     return f0, timeInSec
 
 def get_f0_from_Hps(X, fs, order):
-    xb, t=block_audio(x, blockSize, hopSize, fs)
-    X, freq=compute_spectrogram(xb, fs)
     freqRange=int((len(X[0])-1)/order)
     f0=np.zeros((1,len(X)))
     HPS=np.zeros((len(xb),freqRange))
     freqSpread=np.linspace(0,fs/2, len(X[0]))
-    for h in range(len(X)):
+    for h in range(len(xb)):
         for i in range(freqRange):
             multiplier=1
             for j in range(1,order+1):
@@ -67,13 +65,11 @@ def get_f0_from_Hps(X, fs, order):
             if max(HPS[h,:])==HPS[h,j]:
                 index=j
         f0[0,h]=freqSpread[index] 
-    plt.plot(HPS[0])
-    print(f0)
     return f0
 
 def track_pitch_hps(x, blockSize, hopSize, fs):
     xb, t=block_audio(x, blockSize, hopSize, fs)
-    order=4
+    order=7
     X, freq=compute_spectrogram(xb, fs)
     f0=get_f0_from_Hps(X, fs, order)
     timeInSec=t
