@@ -50,10 +50,12 @@ def track_pitch_fftmax(x, blockSize, hopSize, fs):
 
 def get_f0_from_Hps(X, fs, order):
     freqRange=int((len(X[0])-1)/order)
+    # print len(X)
+    # print X.shape
     f0=np.zeros((1,len(X)))
-    HPS=np.zeros((len(xb),freqRange))
+    HPS=np.zeros((len(X),freqRange))
     freqSpread=np.linspace(0,fs/2, len(X[0]))
-    for h in range(len(xb)):
+    for h in range(len(X)):
         for i in range(freqRange):
             multiplier=1
             for j in range(1,order+1):
