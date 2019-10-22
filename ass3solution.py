@@ -110,6 +110,11 @@ def eval_voiced_fn(estimation, annotation):
 
 
 def eval_pitchtrack_v2(estimation, annotation):
+
+
+    pfp = eval_voiced_fp(estimation, annotation)
+    pfn = eval_voiced_fn(estimation, annotation)
+
     # Remove values for zeros in groundtruthInHz
     estimation = np.take(estimation, np.nonzero(annotation)).squeeze()
     annotation = np.take(annotation, np.nonzero(annotation)).squeeze()
@@ -122,10 +127,7 @@ def eval_pitchtrack_v2(estimation, annotation):
     estimateInCents = 1200 * np.log2(estimation / 440)
     annotationInCents = 1200 * np.log2(annotation / 440)
 
-    errCentRms = np.sqrt(np.mean(np.power(estimateInCents - groundtruthInCents, 2)))
-
-    pfp = eval_voiced_fp(estimation, annotation)
-    pfn = eval_voiced_fn(estimation, annotation)
+    errCentRms = np.sqrt(np.mean(np.power(estimateInCents - annotationInCents, 2)))
 
     return errCentRms, pfp, pfn
 
@@ -155,6 +157,8 @@ def executeassign3():
     plt.xlabel('Time')
     plt.ylabel('Frequency (Hz)')
     plt.grid()
+
+    print(t_fftmax)
 
     plt.subplot(212)
     plt.title('Prediction Error')
@@ -222,7 +226,7 @@ def eval(path_data):
         matchingAnnotatedFreqHz = []
 
         for i in range(len(est_timestamps)):
-            est_timestamps = np.around(est_timestamps[i], 3)
+            est_timestamps[i] = np.around(est_timestamps[i], 3)
 
             closebyTimestampsIdx = np.argwhere((ann_timestamps > (est_timestamps - matchPrecision)) & (
                         ann_timestamps < (est_timestamps + matchPrecision))).squeeze()
@@ -236,9 +240,9 @@ def eval(path_data):
         matchingAnnotatedTimestamps = np.array(matchingAnnotatedTimestamps)
         matchingAnnotatedFreqHz = np.array(matchingAnnotatedFreqHz)
         est_freqHz_fft, est_timestamps_fft = track_pitch_fftmax(audio, 1024, 512, fs)
-        errCentRms_fft, pfp_fft, pfn_fft = eval_pitchtrack_v2(est_freqHz_fft, matchingAnnotatedFreqHz)
+        errCentRms_fft, pfp_fft, pfn_fft = eval_pitchtrack_v2(np.transpose(est_freqHz_fft), ann_freqHz)
         est_freqHz_hps, est_timestamps_hps = track_pitch_hps(audio, 1024, 512, fs)
-        errCentRms_hps, pfp_hps, pfn_hps = eval_pitchtrack_v2(est_freqHz_hps, matchingAnnotatedFreqHz)
+        errCentRms_hps, pfp_hps, pfn_hps = eval_pitchtrack_v2(np.transpose(est_freqHz_hps), ann_freqHz)
     return
 
 
@@ -246,4 +250,12 @@ def eval(path_data):
 if __name__ == '__main__':
     # f = executeassign3('trainData')
     # print(f)
-    executeassign3()
+    # executeassign3()
+    eval('trainData')
+    #
+    # fs, x = wavread('./traindata/sine-440.wav')
+    # xb, t = block_audio(x, 2048, 512, fs)
+    # X, freq = compute_spectrogram(xb, fs)
+    # f0 = get_f0_from_Hps(X, fs, 4)
+    #
+    # print(f0)
