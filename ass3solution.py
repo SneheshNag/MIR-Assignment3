@@ -31,7 +31,7 @@ def hann(window_length):
 
 # A1
 def compute_spectrogram(xb, fs):
-    K = len(xb[1])
+    K = len(xb[0])
     X = np.abs(np.fft.rfft(xb*hann(K), K, axis=1))
     val = (1.0 * fs) / K
     freq = np.arange(0, len(X[0]), dtype=int) * val
@@ -49,20 +49,26 @@ def track_pitch_fftmax(x, blockSize, hopSize, fs):
     return f0, timeInSec
 
 def get_f0_from_Hps(X, fs, order):
-    freqRange=int(len(X[0])/order)
-    HPS=X[:,0:freqRange]
+    xb, t=block_audio(x, blockSize, hopSize, fs)
+    X, freq=compute_spectrogram(xb, fs)
+    freqRange=int((len(X[0])-1)/order)
     f0=np.zeros((1,len(X)))
+    HPS=np.zeros((len(xb),freqRange))
     freqSpread=np.linspace(0,fs/2, len(X[0]))
     for h in range(len(X)):
-        for j in range(1,order):
-            for i in range(freqRange):
-                HPS[h,i]=HPS[h,i]*(X[h,i*(j+1)]**2)  
-            if max(HPS[h,:])>10**100:
-                HPS[h,:]=HPS[h,:]/max(HPS[h,:])  
+        for i in range(freqRange):
+            multiplier=1
+            for j in range(1,order+1):
+                multiplier=multiplier*(X[h,i*j])    #There should be a power of 2 here but it seemed to work better without it
+            HPS[h,i]=multiplier
+            if max(HPS[h,:])>10**10:    #Prevent the HPS getting too big 
+                HPS[h,:]=HPS[h,:]/max(HPS[h,:]) 
         for j in range(freqRange):
             if max(HPS[h,:])==HPS[h,j]:
                 index=j
-        f0[0,h]=freqSpread[index]      
+        f0[0,h]=freqSpread[index] 
+    plt.plot(HPS[0])
+    print(f0)
     return f0
 
 def track_pitch_hps(x, blockSize, hopSize, fs):
