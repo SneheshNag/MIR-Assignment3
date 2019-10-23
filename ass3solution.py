@@ -142,7 +142,7 @@ def track_pitch_acf(x, blockSize, hopSize, fs):
     for b in blocked_x:
         f0 = get_f0_from_acf(b, fs)
         frequencies.append(f0)
-    return [np.array(frequencies), timeInSec]
+    return np.array(frequencies), timeInSec
 
 
 # D3
