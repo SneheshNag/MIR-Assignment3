@@ -38,6 +38,7 @@ def compute_spectrogram(xb, fs):
     freq = np.arange(0, len(X[0]), dtype=int) * val
     return X, freq
 
+# A2
 def track_pitch_fftmax(x, blockSize, hopSize, fs):
     xb, t = block_audio(x, blockSize, hopSize, fs)
     X, freq=compute_spectrogram(xb, fs)
@@ -50,6 +51,7 @@ def track_pitch_fftmax(x, blockSize, hopSize, fs):
                 f0[0,i]=freq[j]
     return np.transpose(f0), timeInSec
 
+# B1
 def get_f0_from_Hps(X, fs, order):
     freqRange=int((len(X[0])-1)/order)
     # print len(X)
@@ -71,6 +73,7 @@ def get_f0_from_Hps(X, fs, order):
         f0[0,h]=freqSpread[index]
     return f0
 
+# B2
 def track_pitch_hps(x, blockSize, hopSize, fs):
     xb, t=block_audio(x, blockSize, hopSize, fs)
     order=4
@@ -79,6 +82,7 @@ def track_pitch_hps(x, blockSize, hopSize, fs):
     timeInSec=t
     return np.transpose(f0), timeInSec
 
+# ACF
 def get_f0_from_acf(inputVector, fs, bIsNormalized=True):
     r = np.correlate(inputVector, inputVector, 'full')
 
@@ -103,7 +107,7 @@ def track_pitch_acf(x, blockSize, hopSize, fs):
         frequencies.append(f0)
     return np.array(frequencies), timeInSec
 
-
+# C1
 def extract_rms(xb):
     rms = np.zeros(xb.shape[0])
     for i in range(xb.shape[0]):
@@ -113,6 +117,7 @@ def extract_rms(xb):
     rms = 20 * np.log10(rms)
     return rms
 
+# C2
 def create_voicing_mask(rmsDb, thresholdDb):
     mask = np.zeros_like(rmsDb)
     for i in range(rmsDb.shape[0]):
@@ -122,6 +127,7 @@ def create_voicing_mask(rmsDb, thresholdDb):
             mask[i] = 1
     return mask
 
+# C3
 def apply_voicing_mask(f0, mask):
     f0Adj = f0.squeeze() * mask.squeeze()
     print(f0.shape)
@@ -135,17 +141,19 @@ def mask_wrap(x, blockSize, hopSize, fs, f0, voicingThres):
     f0adj = apply_voicing_mask(f0, mask)
     return f0adj
 
+# D1
 def eval_voiced_fp(estimation, annotation):
     print()
     pfp = np.count_nonzero(estimation) / np.count_nonzero(annotation==0)
     return pfp
 
+# D2
 def eval_voiced_fn(estimation, annotation):
     num = np.take(estimation, np.nonzero(annotation))
     pfn = np.count_nonzero(num==0) / np.count_nonzero(annotation)
     return pfn
 
-
+# D3
 def eval_pitchtrack_v2(estimation, annotation):
 
     pfp = eval_voiced_fp(estimation, annotation)
@@ -166,6 +174,7 @@ def eval_pitchtrack_v2(estimation, annotation):
 
     return errCentRms, pfp, pfn
 
+# E1
 def executeassign3():
     fs = 44100
     y1 = np.sin(2 * np.pi * 441. * np.linspace(0, 1, fs))
@@ -254,6 +263,7 @@ def eval(path_data):
     print('metrics for hps: ', np.mean(metrics, 0))
     return
 
+# E6
 def track_pitch(x, blockSize, hopSize, fs, method, voicingThres):
     if method == 'acf':
         f0, t = track_pitch_acf(x, blockSize, hopSize, fs)
