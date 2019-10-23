@@ -118,7 +118,7 @@ def eval_voiced_fn(estimation, annotation):
     return pfn
 
 # ACF
-def get_f0_from_acf(inputVector, bIsNormalized=True):
+def get_f0_from_acf(inputVector, fs, bIsNormalized=True):
     r = np.correlate(inputVector, inputVector, 'full')
 
     if bIsNormalized:
