@@ -103,7 +103,7 @@ def create_voicing_mask(rmsDb, thresholdDb):
 # C3
 def apply_voicing_mask(f0, mask):
 
-    f0Adj = f0 * mask
+    f0Adj = f0.squeeze() * mask.squeeze()
     return f0Adj
 
 # D1
@@ -135,6 +135,14 @@ def get_f0_from_acf(inputVector, fs, bIsNormalized=True):
         f0 = fs / abs(peaks[sorted_arg][1] - peaks[sorted_arg][0])
         return f0
     return 0
+
+def track_pitch_acf(x, blockSize, hopSize, fs):
+    blocked_x, timeInSec = block_audio(x, blockSize, hopSize, fs)
+    frequencies = []
+    for b in blocked_x:
+        f0 = get_f0_from_acf(b, fs)
+        frequencies.append(f0)
+    return [np.array(frequencies), timeInSec]
 
 
 # D3
@@ -278,8 +286,13 @@ def eval(path_data):
 
 
 if __name__ == '__main__':
-    f = executeassign3('trainData')
+    # f = executeassign3('trainData')
     # print(f)
     # executeassign3()
     # eval('trainData')
+
+    fs, x = wavread('./traindata/sine-440.wav')
+    xb,_ = block_audio(x, 1024, 512, fs)
+
+
 
