@@ -1,83 +1,83 @@
 [
 
     {
-        "name": "Visual",
+        "name": "ROI.Visual",
         "size": 12,
         "imports": [
-            "Somatomotor",
-            "Dorsal At.",
-            "Exec. Contr.",
-	        "DM"
+            "ROI.Somatomotor",
+            "ROI.Dorsal",
+            "ROI.Exec",
+	    "ROI.DM"
         ]
     },
     {
-        "name": "Somatomotor",
+        "name": "ROI.Somatomotor",
         "size": 2,
         "imports": [
-	        "Visual",
-            "Dorsal At.",
-	        "Ventral At.", 
-            "Limbic",
-            "Exec. Contr.",
-	        "DM"
-	    ]
+	    "ROI.Visual",
+            "ROI.Dorsal",
+	    "ROI.Ventral", 
+            "ROI.Limbic",
+            "ROI.Exec",
+	    "ROI.DM"
+	 ]
     },
     {
-        "name": "Dorsal At.",
+        "name": "ROI.Dorsal",
         "size": 120,
         "imports": [
-            "Visual",
-            "Somatomotor",
-	        "Ventral At.", 
-            "Limbic",
-            "Exec. Contr.",
-	        "DM"
+            "ROI.Visual",
+            "ROI.Somatomotor",
+	    "ROI.Ventral", 
+            "ROI.Limbic",
+            "ROI.Exec",
+	    "ROI.DM"
         ]
     },
     {
-        "name": "Ventral At.",
+        "name": "ROI.Ventral",
         "size": 19,
         "imports": [
-            "Somatomotor",
-	        "Dorsal At.", 
-            "Limbic",
-            "Exec. Contr.",
-	        "DM"
+            "ROI.Somatomotor",
+	    "ROI.Dorsal", 
+            "ROI.Limbic",
+            "ROI.Exec",
+	    "ROI.DM"
 	    ]
     },
     {
-        "name": "Limbic",
+        "name": "ROI.Limbic",
         "size": 121,
         "imports": [
-            "Somatomotor",
-            "Dorsal At.",
-            "Ventral At.", 
-            "Exec. Contr.",
-            "DM"
+            "ROI.Somatomotor",
+            "ROI.Dorsal",
+            "ROI.Ventral", 
+            "ROI.Exec",
+            "ROI.DM"
 	    ]
     },
     {
-        "name": "Exec. Contr.",
+        "name": "ROI.Exec",
         "size": 50,
         "imports": [
-            "Visual",
-            "Somatomotor",
-            "Dorsal At.",
-            "Ventral At.",
-            "Limbic", 
-            "DM"
+            "ROI.Visual",
+            "ROI.Somatomotor",
+            "ROI.Dorsal",
+            "ROI.Ventral",
+            "ROI.Limbic", 
+            "ROI.DM"
         ]
     },
 	{
-        "name": "DM",
+        "name": "ROI.DM",
         "size": 100,
         "imports": [
-            "Visual",
-            "Somatomotor",
-            "Dorsal At.",
-            "Ventral At.",
-            "Limbic", 
-            "Exec. Contr."
+            "ROI.Visual",
+            "ROI.Somatomotor",
+            "ROI.Dorsal",
+            "ROI.Ventral",
+            "ROI.Limbic", 
+            "ROI.Exec"
         ]
     }
 ]
