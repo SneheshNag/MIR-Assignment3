@@ -1,83 +1,83 @@
 [
 
     {
-        "name": "ROI.Visual",
+        "name": "ROI.a.Visual",
         "size": 12,
         "imports": [
-            "ROI.Somatomotor",
-            "ROI.Dorsal",
-            "ROI.Exec",
-	    "ROI.DM"
+            "ROI.a.Somatomotor",
+            "ROI.b.Dorsal",
+            "ROI.c.Exec",
+	    "ROI.c.DM"
         ]
     },
     {
-        "name": "ROI.Somatomotor",
+        "name": "ROI.c.Somatomotor",
         "size": 2,
         "imports": [
-	    "ROI.Visual",
-            "ROI.Dorsal",
-	    "ROI.Ventral", 
-            "ROI.Limbic",
-            "ROI.Exec",
-	    "ROI.DM"
+	    "ROI.c.Visual",
+            "ROI.b.Dorsal",
+	    "ROI.b.Ventral", 
+            "ROI.c.Limbic",
+            "ROI.c.Exec",
+	    "ROI.c.DM"
 	 ]
     },
     {
-        "name": "ROI.Dorsal",
+        "name": "ROI.b.Dorsal",
         "size": 120,
         "imports": [
-            "ROI.Visual",
-            "ROI.Somatomotor",
-	    "ROI.Ventral", 
-            "ROI.Limbic",
-            "ROI.Exec",
-	    "ROI.DM"
+            "ROI.a.Visual",
+            "ROI.a.Somatomotor",
+	    "ROI.b.Ventral", 
+            "ROI.c.Limbic",
+            "ROI.c.Exec",
+	    "ROI.c.DM"
         ]
     },
     {
         "name": "ROI.Ventral",
         "size": 19,
         "imports": [
-            "ROI.Somatomotor",
-	    "ROI.Dorsal", 
-            "ROI.Limbic",
-            "ROI.Exec",
-	    "ROI.DM"
+            "ROI.a.b.Somatomotor",
+	    "ROI.b.Dorsal", 
+            "ROI.c.Limbic",
+            "ROI.c.Exec",
+	    "ROI.c.DM"
 	    ]
     },
     {
-        "name": "ROI.Limbic",
+        "name": "ROI.c.Limbic",
         "size": 121,
         "imports": [
-            "ROI.Somatomotor",
-            "ROI.Dorsal",
-            "ROI.Ventral", 
-            "ROI.Exec",
-            "ROI.DM"
+            "ROI.a.Somatomotor",
+            "ROI.b.Dorsal",
+            "ROI.b.Ventral", 
+            "ROI.c.Exec",
+            "ROI.c.DM"
 	    ]
     },
     {
-        "name": "ROI.Exec",
+        "name": "ROI.c.Exec",
         "size": 50,
         "imports": [
-            "ROI.Visual",
-            "ROI.Somatomotor",
-            "ROI.Dorsal",
-            "ROI.Ventral",
-            "ROI.Limbic", 
-            "ROI.DM"
+            "ROI.a.Visual",
+            "ROI.a.Somatomotor",
+            "ROI.b.Dorsal",
+            "ROI.b.Ventral",
+            "ROI.c.Limbic", 
+            "ROI.c.DM"
         ]
     },
 	{
-        "name": "ROI.DM",
+        "name": "ROI.c.DM",
         "size": 100,
         "imports": [
-            "ROI.Visual",
-            "ROI.Somatomotor",
-            "ROI.Dorsal",
-            "ROI.Ventral",
-            "ROI.Limbic", 
-            "ROI.Exec"
+            "ROI.a.Visual",
+            "ROI.a.Somatomotor",
+            "ROI.b.Dorsal",
+            "ROI.b.Ventral",
+            "ROI.c.Limbic", 
+            "ROI.c.Exec"
         ]
     }
 ]
